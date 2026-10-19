@@ -1,0 +1,54 @@
+diff --git a/node_modules/@oicl/openbridge-webcomponents/dist/charthelpers/legend.js b/node_modules/@oicl/openbridge-webcomponents/dist/charthelpers/legend.js
+index 1ff42a4..ef2ae00 100644
+--- a/node_modules/@oicl/openbridge-webcomponents/dist/charthelpers/legend.js
++++ b/node_modules/@oicl/openbridge-webcomponents/dist/charthelpers/legend.js
+@@ -1,18 +1,41 @@
++// inSCADA patch (patches/@oicl+openbridge-webcomponents+*.patch): legend values are
++// written via innerHTML, so label/value/unit are HTML-escaped and fillStyle is only
++// emitted when it is a valid CSS color.
++function escapeLegendHTML(value) {
++  return String(value).replace(/[&<>"']/g, (ch) => ({
++    "&": "&amp;",
++    "<": "&lt;",
++    ">": "&gt;",
++    '"': "&quot;",
++    "'": "&#39;"
++  })[ch]);
++}
++const LEGEND_COLOR_CHARS = /^[-#\w\s().,%/+]+$/;
++const LEGEND_COLOR_FALLBACK = /^(?:#[0-9a-f]{3,8}|[a-z]+|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|var)\([-\w\s.,%/+]*\))$/i;
++function safeLegendColor(value) {
++  if (typeof value !== "string") return "";
++  const color = value.trim();
++  if (!color || !LEGEND_COLOR_CHARS.test(color)) return "";
++  const supports = typeof CSS !== "undefined" && typeof CSS.supports === "function" ? CSS.supports("color", color) : LEGEND_COLOR_FALLBACK.test(color);
++  return supports ? color : "";
++}
+ function generateLegendHTML(legendItems) {
+-  return legendItems.map(
+-    (item) => `
++  return legendItems.map((item) => {
++    const color = safeLegendColor(item.fillStyle);
++    const colorStyle = color ? ` style="background-color: ${escapeLegendHTML(color)};"` : "";
++    return `
+         <div class="legend-item">
+           <span class="legend-group legend-group--label">
+-            <span class="legend-color" style="background-color: ${item.fillStyle};"></span>
+-            <span class="legend-label">${item.label}</span>
++            <span class="legend-color"${colorStyle}></span>
++            <span class="legend-label">${escapeLegendHTML(item.label)}</span>
+           </span>
+           <span class="legend-group legend-group--value-unit">
+-            <span class="legend-value">${item.value}</span>
+-            <span class="legend-unit">${item.unit}</span>
++            <span class="legend-value">${escapeLegendHTML(item.value)}</span>
++            <span class="legend-unit">${escapeLegendHTML(item.unit)}</span>
+           </span>
+         </div>
+-      `
+-  ).join("");
++      `;
++  }).join("");
+ }
+ export {
+   generateLegendHTML

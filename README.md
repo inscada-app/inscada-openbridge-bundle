@@ -207,6 +207,10 @@ Works in all modern browsers that support ES modules and Web Components:
 
 The JS bundle is large because it includes **all** 180+ components and 1900+ icons. CDN providers (jsdelivr, unpkg) serve gzipped/brotli compressed versions automatically, so actual transfer size is ~1.2 MB.
 
+## Patches
+
+`patches/` holds a [patch-package](https://github.com/ds300/patch-package) patch, applied on `npm install`/`npm ci` (`postinstall`, fails the install if it no longer applies). Chart legends are written with `innerHTML`, so the patched `generateLegendHTML` HTML-escapes `label`, `value` and `unit` and only emits `fillStyle` when it is a valid CSS color. `npm test` (also run before `npm run build`) checks the patched helper.
+
 ## About
 
 This bundle is maintained by **[inSCADA](https://inscada.com)** — an industrial IoT and SCADA platform. The underlying components are from the [OpenBridge Design System](https://www.openbridge.no/) by Ocean Industries Concept Lab (OICL), designed for maritime bridge systems in compliance with **IEC 62288**.
